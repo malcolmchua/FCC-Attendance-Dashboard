@@ -21,6 +21,11 @@ module.exports = async (req, res) => {
     return;
   }
 
+  // Describes the stored address without ever revealing it.
+  const shape = feed.startsWith('https://script.google.com/')
+    ? 'looks right'
+    : 'WRONG — it starts with "' + feed.slice(0, 12) + '"';
+
   try {
     const upstream = await fetch(feed, { redirect: 'follow' });
     const text = await upstream.text();
@@ -30,19 +35,22 @@ module.exports = async (req, res) => {
       data = JSON.parse(text);
     } catch (e) {
       res.status(502).json({
-        error: 'The attendance feed did not answer with data. Check the feed address.'
+        error: 'Feed did not return data. Address ' + shape +
+               ', length ' + feed.length +
+               ', HTTP ' + upstream.status +
+               '. It replied: ' + text.slice(0, 120)
       });
       return;
     }
 
     if (data.error) {
-      res.status(502).json({ error: 'The attendance feed refused: ' + data.error });
+      res.status(502).json({ error: 'The feed refused: ' + data.error });
       return;
     }
 
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Could not reach the feed. Address ' + shape + '. ' + err.message });
   }
 };
