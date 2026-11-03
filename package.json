@@ -1,0 +1,6 @@
+{
+  "name": "fcc-attendance-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Read-only attendance dashboard for FCC."
+}
